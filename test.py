@@ -55,7 +55,7 @@ algorithm = GeneticAlgorithm(
 start = time()
 algorithm.run()
 stop = time()
-print = stop-start
+print(stop - start)
 
 res = get_non_dominated_solutions(algorithm.solutions)
 print_function_values_to_screen(res)
