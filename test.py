@@ -1,3 +1,4 @@
+from time import time
 import clr
 
 clr.AddReference("/usr/local/lib/dwsim/DWSIM.Automation.dll")
@@ -51,8 +52,10 @@ algorithm = GeneticAlgorithm(
     selection=BestSolutionSelection(),
     # selection=StoppingByKeyboard()
 )
-
+start = time()
 algorithm.run()
+stop = time()
+print = stop-start
 
 res = get_non_dominated_solutions(algorithm.solutions)
 print_function_values_to_screen(res)
