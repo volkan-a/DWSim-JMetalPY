@@ -1,17 +1,21 @@
 from sys import platform
 import clr
-from time import time
-from jmetal.algorithm.singleobjective import GeneticAlgorithm
-from jmetal.operator import SBXCrossover, PolynomialMutation
+from jmetal.algorithm.singleobjective import (
+    SimulatedAnnealing,
+    GeneticAlgorithm,
+    LocalSearch,
+    EvolutionStrategy,
+)
+from jmetal.operator import SBXCrossover, PolynomialMutation, SimpleRandomMutation
 from jmetal.operator import BestSolutionSelection
+from jmetal.util.comparator import Generic
 from jmetal.util.termination_criterion import StoppingByEvaluations
-from jmetal.core.problem import OnTheFlyFloatProblem
+from jmetal.core.problem import FloatProblem, OnTheFlyFloatProblem, FloatSolution
 from jmetal.util.solution import (
     get_non_dominated_solutions,
     print_function_values_to_screen,
     print_variables_to_screen,
 )
-
 
 if platform == "win32":
     import pythoncom
@@ -57,6 +61,17 @@ def c2(p):
     return p[2] - 2000e3
 
 
+class Problems(FloatProblem):
+    def __init__(self):
+        super().__init__()
+        self.number_of_constraints = 1
+        self.number_of_objectives = 1
+        self.number_of_variables = 2
+
+    def evaluate(self, solution: FloatSolution) -> FloatSolution:
+        return super().evaluate(solution)
+
+
 problem: OnTheFlyFloatProblem = (
     OnTheFlyFloatProblem()
     .set_name("Optimum intercooler pressure")
@@ -65,24 +80,45 @@ problem: OnTheFlyFloatProblem = (
     .add_variable(100e3, 2000e3)
 )
 
-algorithm = GeneticAlgorithm(
+algorithm = SimulatedAnnealing(
     problem=problem,
-    population_size=10,
-    offspring_population_size=10,
-    mutation=PolynomialMutation(probability=1.0, distribution_index=20),
-    crossover=SBXCrossover(probability=1.0, distribution_index=20),
-    termination_criterion=StoppingByEvaluations(max_evaluations=1000),
-    # termination_criterion=StoppingByKeyboard(),
-    selection=BestSolutionSelection(),
+    mutation=SimpleRandomMutation(probability=1.0),
+    termination_criterion=StoppingByEvaluations(max_evaluations=100),
 )
-start = time()
+
+# algorithm = LocalSearch(
+#     problem=problem,
+#     termination_criterion=StoppingByEvaluations(max_evaluations=100),
+#     comparator=Generic(),
+#     mutation=SimpleRandomMutation(probability=1.0),
+# )
+
+# algorithm = E(
+#     problem=problem,
+#     population_size=25,
+#     offspring_population_size=25,
+#     mutation=PolynomialMutation(
+#         probability=1 / problem.number_of_variables, distribution_index=10
+#     ),
+#     crossover=SBXCrossover(probability=1.0, distribution_index=10),
+#     termination_criterion=StoppingByEvaluations(max_evaulations=1000),
+# )
+
+# algorithm = GeneticAlgorithm(
+#     problem=problem,
+#     population_size=10,
+#     offspring_population_size=10,
+#     mutation=PolynomialMutation(probability=1.0, distribution_index=20),
+#     crossover=SBXCrossover(probability=1.0, distribution_index=20),
+#     termination_criterion=StoppingByEvaluations(max_evaluations=100),
+#     # termination_criterion=StoppingByKeyboard(),
+#     selection=BestSolutionSelection(),
+# )
 algorithm.run()
-stop = time()
-print(stop - start)
+print(f"Elapsed time: {algorithm.total_computing_time}")
 
 
 front = algorithm.get_result()
-
-# front = get_non_dominated_solutions(algorithm.get_result())
-print_function_values_to_screen(front, "fun.three_stages.txt")
-print_variables_to_screen(front, "var.three_stages.txt")
+print(type(front))
+for d in dir(front):
+    print(d)
