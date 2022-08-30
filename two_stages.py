@@ -1,16 +1,10 @@
-from time import time
+from sys import platform
 import clr
-
-clr.AddReference("/usr/local/lib/dwsim/DWSIM.Automation.dll")
-clr.AddReference("/usr/local/lib/dwsim/DWSIM.Interfaces.dll")
-clr.AddReference("/usr/local/lib/dwsim/DWSIM.UnitOperations.dll")
-
-from DWSIM.Automation import Automation2
-from DWSIM.Interfaces.Enums import PropertyType
+from time import time
 from jmetal.algorithm.singleobjective import GeneticAlgorithm
-from jmetal.operator import SBXCrossover, PolynomialMutation, BestSolutionSelection
-from jmetal.problem import ZDT1
-from jmetal.util.termination_criterion import StoppingByEvaluations, StoppingByKeyboard
+from jmetal.operator import SBXCrossover, PolynomialMutation
+from jmetal.operator import BestSolutionSelection
+from jmetal.util.termination_criterion import StoppingByEvaluations
 from jmetal.core.problem import OnTheFlyFloatProblem
 from jmetal.util.solution import (
     get_non_dominated_solutions,
@@ -18,8 +12,25 @@ from jmetal.util.solution import (
     print_variables_to_screen,
 )
 
+
+if platform == "win32":
+    import pythoncom
+
+    pythoncom.CoInitialize()
+    PATH = "c:\\Users\\Volkan\\AppData\\Local\\DWSIM8\\"
+elif platform == "linux":
+    PATH = "/usr/local/lib/dwsim/"
+
+
+clr.AddReference(PATH + "DWSIM.Automation.dll")
+clr.AddReference(PATH + "DWSIM.Interfaces.dll")
+clr.AddReference(PATH + "DWSIM.UnitOperations.dll")
+
+from DWSIM.Automation import Automation2
+from DWSIM.Interfaces.Enums import PropertyType
+
 fs = Automation2()
-sim = fs.LoadFlowsheet("test.dwxmz")
+sim = fs.LoadFlowsheet("two_stages.dwxmz")
 wc1 = sim.GetFlowsheetSimulationObject("WC1")
 wc2 = sim.GetFlowsheetSimulationObject("WC2")
 comp1 = sim.GetFlowsheetSimulationObject("COMP1")
@@ -50,7 +61,6 @@ algorithm = GeneticAlgorithm(
     termination_criterion=StoppingByEvaluations(max_evaluations=1000),
     # termination_criterion=StoppingByKeyboard(),
     selection=BestSolutionSelection(),
-    # selection=StoppingByKeyboard()
 )
 start = time()
 algorithm.run()
